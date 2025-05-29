@@ -5,6 +5,7 @@ import CustomBox from '@/components/CustomBox'
 import { Button } from '@/components/ui/button'
 import { GestureHandlerRootView, TextInput } from 'react-native-gesture-handler'
 import { useRouter } from 'expo-router'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const Signup = () => {
    
@@ -16,7 +17,42 @@ const Signup = () => {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  
 
+  const navigateToLoginScreen = async () => {
+    try {
+      console.log('Navigating to login screen...');
+      const response = await fetch(`http://192.168.56.1:8000/auth/v1/signup`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          'first_name': firstName,
+          'last_name': lastName,
+          'email': email,
+          'phone_number': phoneNumber,
+          'password': password,
+
+        }),
+      });
+  
+      const data = await response.json();
+      console.log(data);
+      console.log(data["accessToken"]);
+      console.log(data["token"]);
+      await AsyncStorage.setItem('accessToken', data["accessToken"]);
+      await AsyncStorage.setItem('refreshToken', data["token"]);
+  
+      router.replace('/Home');
+    } catch (error) {
+      console.error('Error during sign up:', error);
+    }
+  };
+
+ 
   return (
    <GestureHandlerRootView style={{flex: 1}}>
       <View style={styles.signupContainer}>
@@ -36,14 +72,14 @@ const Signup = () => {
             onChangeText={text => setLastName(text)}
             style={styles.textInput}
             placeholderTextColor="#888"
-          />
-                <TextInput
+           />
+                 {/* <TextInput
             placeholder="User Name"
             value={userName}
             onChangeText={text => setUserName(text)}
             style={styles.textInput}
             placeholderTextColor="#888"
-          />
+          /> */}
           <TextInput
             placeholder="Email"
             value={email}
@@ -70,9 +106,9 @@ const Signup = () => {
           />
         </CustomBox>
         </View>
-        <Button  style={styles.button}>
-            <CustomBox style={buttonBox}>
-                <CustomText style={{textAlign: 'center'}}>Sign Up</CustomText>
+        <Button onPressIn={() => navigateToLoginScreen()} style={styles.button}>
+            <CustomBox  style={buttonBox}>
+                <CustomText style={{textAlign: 'center'}}>Submit</CustomText>
             </CustomBox>
           </Button>
           <Button onPress={() => router.push('/Login')} style={styles.button}>
